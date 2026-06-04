@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>M12 — Séance IA + Blogger | Créer avec l'IA</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous"/>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet"/>
+
+  <style>
+    :root {
+      --bd:    #0A2A6E;
+      --bm:    #1565C0;
+      --bl:    #1E88E5;
+      --bxl:   #E3F2FD;
+      --bxxl:  #F0F7FF;
+      --blt:   #BBDEFB;
+      --bg:    #F4F8FF;
+      --bg2:   #EBF3FF;
+      --wh:    #FFFFFF;
+
+      /* tool colours */
+      --sh:    #0F9D58;   /* Google Sheets green */
+      --sh-lt: #E8F5E9;
+      --ai:    #1A73E8;   /* AI blue (Claude/ChatGPT) */
+      --ai-lt: #E8F0FE;
+      --bl2:   #FF6D00;   /* Blogger orange */
+      --bl2-lt:#FFF3E0;
+      --img:   #6A1B9A;   /* Image gen purple */
+      --img-lt:#F3E5F5;
+
+      --ink:   #0D1B3E;
+      --ink2:  #37475F;
+      --muted: #7B8BB2;
+      --shad:  rgba(13,35,88,.09);
+      --fh:    'Nunito',sans-serif;
+      --fm:    'Fira Code',monospace;
+    }
+
+    html { scroll-behavior:smooth; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:var(--fh); font-weight:400; background:var(--bg); color:var(--ink); overflow-x:hidden; }
+    ::selection { background:var(--bm); color:#fff; }
+
+    /* ── scroll-snapped pages ── */
+    body  { scroll-snap-type: y mandatory; }
+    .page { scroll-snap-align: start; min-height:100vh; display:flex; flex-direction:column; justify-content:center; position:relative; overflow:hidden; padding:76px 0 52px; }
+
+    /* dot grid */
+    .page::after { content:''; position:absolute; inset:0; background-image:radial-gradient(circle,#BBDEFB 1px,transparent 1px); background-size:26px 26px; z-index:0; pointer-events:none; opacity:.45; }
+    .page.dark::after { opacity:.06; background-image:radial-gradient(circle,rgba(255,255,255,.14) 1px,transparent 1px); }
+    .page > .container { position:relative; z-index:1; }
+
+    /* ── stripe / ghost / progress / nav ── */
+    .top-stripe { position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,var(--bd),var(--bl),#90CAF9); }
+    .ghost { position:absolute; right:2%; bottom:-2%; font-family:var(--fh); font-weight:900; font-size:clamp(90px,13vw,170px); line-height:1; pointer-events:none; z-index:0; letter-spacing:-.02em; }
+    .ghost.lt { color:rgba(21,101,192,.05); }
+    .ghost.dk { color:rgba(255,255,255,.04); }
+
+    #pgbar { position:fixed; top:0; left:0; height:4px; background:linear-gradient(90deg,var(--bd),var(--bl),#90CAF9); transition:width .2s; z-index:1000; }
+    #pager { position:fixed; right:20px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:10px; z-index:999; }
+    .pdot { width:10px; height:10px; border-radius:50%; background:var(--blt); border:none; cursor:pointer; transition:all .3s; padding:0; }
+    .pdot.on { background:var(--bm); transform:scale(1.4); box-shadow:0 0 0 3px rgba(21,101,192,.18); }
+    .pdot:hover:not(.on) { background:var(--bl); }
+
+    /* ── helpers ── */
+    .rr4 { border-radius:4px; }
+    .rr8 { border-radius:8px; }
+    .rr12{ border-radius:12px; }
+
+    /* chip */
+    .chip { display:inline-flex; align-items:center; gap:7px; background:var(--bxxl); border:1.5px solid var(--blt); border-radius:4px; padding:5px 14px; font-family:var(--fm); font-size:11px; color:var(--bm); letter-spacing:.1em; text-transform:uppercase; }
+    .chip .dot { width:7px; height:7px; border-radius:50%; background:var(--bl); animation:blink 2s ease infinite; }
+    .chip.wh { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.22); color:rgba(255,255,255,.9); }
+    .chip.wh .dot { background:#90CAF9; }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+    /* section bar */
+    .sbar { display:flex; align-items:center; gap:12px; background:var(--bd); color:#fff; border-radius:8px; padding:13px 20px; margin-bottom:22px; }
+    .sbar .sn { font-family:var(--fm); font-size:12px; background:rgba(255,255,255,.14); border-radius:4px; padding:2px 10px; color:#90CAF9; }
+    .sbar .st { font-family:var(--fh); font-size:17px; font-weight:800; }
+
+    /* tool badge */
+    .tbadge { display:inline-flex; align-items:center; gap:8px; padding:7px 16px; border-radius:6px; font-family:var(--fh); font-size:13px; font-weight:700; }
+    .tbadge.sh  { background:var(--sh-lt);  color:var(--sh);  border:1.5px solid #A5D6A7; }
+    .tbadge.ai  { background:var(--ai-lt);  color:var(--ai);  border:1.5px solid #90CAF9; }
+    .tbadge.blg { background:var(--bl2-lt); color:var(--bl2); border:1.5px solid #FFCC02; }
+    .tbadge.img { background:var(--img-lt); color:var(--img); border:1.5px solid #CE93D8; }
+
+    /* ════════ PAGE 1 ════════ */
+    .page.p1 { background:var(--bd); }
+
+    .obj-pill { display:flex; align-items:flex-start; gap:14px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.13); border-radius:10px; padding:13px 18px; margin-bottom:10px; }
+    .obj-pill .num { font-family:var(--fh); font-size:20px; font-weight:900; color:#90CAF9; opacity:.5; flex-shrink:0; line-height:1.1; width:26px; }
+    .obj-pill .txt { font-size:14.5px; line-height:1.6; color:rgba(255,255,255,.8); }
+    .obj-pill .txt strong { color:#fff; font-weight:700; }
+
+    /* workflow strip */
+    .flow-strip { display:flex; align-items:center; gap:0; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:10px; overflow:hidden; }
+    .flow-item { flex:1; text-align:center; padding:12px 8px; }
+    .flow-item .fi-icon { font-size:22px; margin-bottom:4px; }
+    .flow-item .fi-name { font-family:var(--fh); font-size:12px; font-weight:700; color:rgba(255,255,255,.9); }
+    .flow-item .fi-sub  { font-family:var(--fm); font-size:9px; color:rgba(255,255,255,.45); margin-top:2px; }
+    .flow-arr { padding:0 4px; font-size:18px; color:rgba(255,255,255,.2); flex-shrink:0; }
+
+    /* ════════ PAGE 2 ════════ */
+    .page.p2 { background:var(--wh); }
+
+    /* phase card */
+    .phase-card { background:var(--wh); border:1.5px solid var(--blt); border-radius:12px; overflow:hidden; box-shadow:0 3px 16px var(--shad); margin-bottom:14px; }
+    .phase-head { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; }
+    .ph-sh  { background:var(--sh); }
+    .ph-ai  { background:var(--ai); }
+    .phase-title { font-family:var(--fh); font-size:15px; font-weight:800; color:#fff; }
+    .phase-time  { font-family:var(--fm); font-size:11px; color:rgba(255,255,255,.75); background:rgba(0,0,0,.18); padding:3px 10px; border-radius:20px; }
+    .phase-body  { padding:16px 20px; }
+
+    /* step row */
+    .sr { display:flex; align-items:flex-start; gap:12px; padding:8px 0; border-bottom:1px solid var(--bxxl); font-size:14px; color:var(--ink2); line-height:1.55; }
+    .sr:last-child { border-bottom:none; }
+    .srn { width:22px; height:22px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--fh); font-size:11px; font-weight:800; color:#fff; margin-top:2px; }
+    .srn.sh  { background:var(--sh); }
+    .srn.ai  { background:var(--ai); }
+    .sr strong { color:var(--ink); font-weight:700; }
+
+    /* prompt box */
+    .prompt-box { background:var(--ai-lt); border:1.5px solid #90CAF9; border-radius:10px; overflow:hidden; margin-bottom:10px; }
+    .prompt-head { display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--ai); }
+    .prompt-head span { font-family:var(--fm); font-size:11px; color:rgba(255,255,255,.85); letter-spacing:.06em; }
+    .prompt-body { padding:11px 14px; font-family:var(--fm); font-size:12px; line-height:1.8; color:var(--ink2); }
+    .prompt-body em { color:var(--bm); font-style:normal; font-weight:500; }
+
+    /* sheets mock */
+    .sheets-mock { background:var(--wh); border:1.5px solid #A5D6A7; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px var(--shad); }
+    .sheets-header { background:var(--sh); padding:8px 14px; display:flex; align-items:center; gap:8px; }
+    .sheets-header span { font-family:var(--fh); font-size:12px; font-weight:700; color:#fff; }
+    .sheets-row { display:flex; border-bottom:1px solid #E8F5E9; }
+    .sheets-row:last-child { border-bottom:none; }
+    .sh-cell { padding:6px 10px; font-size:12.5px; flex:1; }
+    .sh-cell.hdr { background:var(--sh-lt); font-family:var(--fh); font-weight:700; color:var(--sh); font-size:11px; letter-spacing:.04em; }
+    .sh-cell.num { flex:0 0 36px; text-align:center; background:#F1F8E9; color:var(--sh); font-family:var(--fm); font-size:11px; border-right:1px solid #A5D6A7; }
+    .sh-cell.ttl { color:var(--ink); font-weight:600; }
+    .sh-cell.tag { color:var(--muted); font-size:11.5px; }
+    .sh-cell.st  { text-align:center; }
+    .status-done { display:inline-block; padding:2px 8px; border-radius:10px; font-family:var(--fm); font-size:10px; font-weight:500; background:var(--sh-lt); color:var(--sh); border:1px solid #A5D6A7; }
+    .status-wip  { display:inline-block; padding:2px 8px; border-radius:10px; font-family:var(--fm); font-size:10px; font-weight:500; background:#FFF9C4; color:#F57F17; border:1px solid #FFE082; }
+    .status-todo { display:inline-block; padding:2px 8px; border-radius:10px; font-family:var(--fm); font-size:10px; font-weight:500; background:var(--bxxl); color:var(--muted); border:1px solid var(--blt); }
+
+    /* ════════ PAGE 3 ════════ */
+    .page.p3 { background:var(--bg2); }
+
+    /* mission card */
+    .mc { background:var(--wh); border:1.5px solid var(--blt); border-radius:12px; overflow:hidden; box-shadow:0 2px 12px var(--shad); margin-bottom:12px; }
+    .mc-head { display:flex; align-items:center; justify-content:space-between; padding:11px 18px; }
+    .mc-head.m1 { background:var(--sh); }
+    .mc-head.m2 { background:var(--ai); }
+    .mc-head.m3 { background:var(--img); }
+    .mc-head.m4 { background:var(--bl2); }
+    .mc-title { font-family:var(--fh); font-size:14px; font-weight:800; color:#fff; }
+    .mc-time  { font-family:var(--fm); font-size:11px; color:rgba(255,255,255,.75); background:rgba(0,0,0,.18); padding:3px 10px; border-radius:20px; }
+    .mc-body  { padding:13px 18px; }
+    .ms { display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid var(--bxxl); font-size:13.5px; color:var(--ink2); }
+    .ms:last-child { border-bottom:none; }
+    .mn { width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--fh); font-size:10px; font-weight:800; color:#fff; margin-top:2px; }
+    .mn.sh  { background:var(--sh); }
+    .mn.ai  { background:var(--ai); }
+    .mn.img { background:var(--img); }
+    .mn.blg { background:var(--bl2); }
+    .ms strong { color:var(--ink); font-weight:700; }
+
+    /* checklist */
+    .cklist { list-style:none; padding:0; margin:0; }
+    .cklist li { display:flex; align-items:flex-start; gap:10px; padding:8px 12px; margin-bottom:6px; background:var(--wh); border:1.5px solid var(--bxxl); border-radius:8px; font-size:13.5px; color:var(--ink2); box-shadow:0 1px 4px var(--shad); }
+    .cklist li .ck { width:19px; height:19px; border-radius:4px; flex-shrink:0; border:1.5px solid var(--blt); background:var(--bxxl); margin-top:1px; }
+    .cklist li strong { color:var(--ink); font-weight:700; }
+
+    /* livrable */
+    .livr { background:var(--bd); border-radius:10px; padding:17px 22px; }
+    .livr .ll { font-family:var(--fm); font-size:10px; color:#90CAF9; letter-spacing:.15em; text-transform:uppercase; margin-bottom:7px; }
+    .livr .lt { font-size:14px; color:rgba(255,255,255,.82); line-height:1.8; }
+    .livr .lt strong { color:#fff; }
+
+    /* quote */
+    .qbox { border-left:3px solid var(--bl); padding:13px 20px; background:var(--bxxl); border-radius:0 8px 8px 0; font-size:14px; line-height:1.75; color:var(--ink2); }
+    .qbox strong { color:var(--bd); font-weight:700; }
+
+    /* AOS */
+    .aos { opacity:0; transform:translateY(20px); transition:opacity .55s ease, transform .55s ease; }
+    .aos.on { opacity:1; transform:none; }
+    .d1{transition-delay:.07s} .d2{transition-delay:.14s} .d3{transition-delay:.21s}
+    .d4{transition-delay:.28s} .d5{transition-delay:.35s}
+
+    @media(max-width:768px){ #pager{display:none;} .page{min-height:auto; padding:56px 0 36px;} body{scroll-snap-type:none;} }
+  </style>
+</head>
+<body>
+
+<div id="pgbar" style="width:0%"></div>
+<nav id="pager">
+  <button class="pdot on"  data-i="0" title="Titre & Flux"></button>
+  <button class="pdot"     data-i="1" title="Sheets + AI"></button>
+  <button class="pdot"     data-i="2" title="Missions"></button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — TITRE, OBJECTIFS & WORKFLOW
+══════════════════════════════════════════ -->
+<div class="page p1 dark" id="p0">
+  <div class="top-stripe"></div>
+  <div class="ghost dk">IA</div>
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- LEFT -->
+      <div class="col-lg-6">
+        <div class="chip wh mb-4 aos"><span class="dot"></span>Module M12 &nbsp;·&nbsp; Séance IA + Blogger</div>
+        <h1 class="aos d1" style="font-family:var(--fh);font-weight:900;font-size:clamp(32px,5vw,62px);line-height:1.05;color:#fff;">
+          Créer avec<br>
+          <span style="color:#64B5F6;">l'IA</span> —<br>
+          Posts &amp; Images
+        </h1>
+        <p class="aos d2" style="font-size:1.05rem;font-weight:400;line-height:1.85;color:rgba(255,255,255,.72);max-width:460px;margin-top:14px;">
+          Utiliser <strong style="color:#fff;">Google Sheets</strong>,
+          <strong style="color:#fff;">ChatGPT / Claude</strong>,
+          un <strong style="color:#fff;">générateur d'images IA</strong>
+          et <strong style="color:#fff;">Blogger</strong>
+          pour produire des articles complets de veille IA.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-4 aos d3">
+          <span class="tbadge sh"><i class="bi bi-table"></i>Google Sheets</span>
+          <span class="tbadge ai"><i class="bi bi-robot"></i>ChatGPT / Claude</span>
+          <span class="tbadge img"><i class="bi bi-image"></i>Image IA</span>
+          <span class="tbadge blg"><i class="bi bi-rss"></i>Blogger</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: objectives + workflow -->
+      <div class="col-lg-6 aos d2">
+        <span style="font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.13em;text-transform:uppercase;display:block;margin-bottom:10px;">Objectifs</span>
+
+        <div class="obj-pill">
+          <div class="num">01</div>
+          <div class="txt">Lire et utiliser une <strong>liste de titres IA générée dans Google Sheets</strong> comme base de travail.</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">02</div>
+          <div class="txt">Générer un <strong>article de blog complet</strong> avec ChatGPT ou Claude à partir d'un titre choisi.</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">03</div>
+          <div class="txt">Créer une <strong>image de couverture</strong> avec un outil IA (DALL-E, Midjourney ou Canva IA).</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">04</div>
+          <div class="txt">Publier le post complet sur <strong>Blogger</strong> avec image, texte mis en forme et tags.</div>
+        </div>
+
+        <!-- workflow strip -->
+        <div class="flow-strip mt-4">
+          <div class="flow-item">
+            <div class="fi-icon">📊</div>
+            <div class="fi-name">Sheets</div>
+            <div class="fi-sub">Liste de titres</div>
+          </div>
+          <div class="flow-arr"><i class="bi bi-arrow-right"></i></div>
+          <div class="flow-item">
+            <div class="fi-icon">🤖</div>
+            <div class="fi-name">IA</div>
+            <div class="fi-sub">Générer l'article</div>
+          </div>
+          <div class="flow-arr"><i class="bi bi-arrow-right"></i></div>
+          <div class="flow-item">
+            <div class="fi-icon">🎨</div>
+            <div class="fi-name">Image IA</div>
+            <div class="fi-sub">Couverture</div>
+          </div>
+          <div class="flow-arr"><i class="bi bi-arrow-right"></i></div>
+          <div class="flow-item">
+            <div class="fi-icon">📝</div>
+            <div class="fi-name">Blogger</div>
+            <div class="fi-sub">Publier</div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 mt-4" style="opacity:.35;">
+          <div style="height:2px;width:28px;background:#90CAF9;border-radius:2px;"></div>
+          <span style="font-family:var(--fm);font-size:11px;color:#90CAF9;letter-spacing:.1em;">01 / 03 — ↓ ou Espace</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — SHEETS + GÉNÉRATION IA
+══════════════════════════════════════════ -->
+<div class="page p2" id="p1">
+  <div class="ghost lt">WRITE</div>
+  <div class="container">
+
+    <div class="sbar aos">
+      <span class="sn">02</span>
+      <span class="st">De la liste de titres au post complet — comment ça marche</span>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: Sheets + prompts -->
+      <div class="col-lg-6">
+
+        <!-- Phase 1 -->
+        <div class="phase-card aos d1">
+          <div class="phase-head ph-sh">
+            <span class="phase-title"><i class="bi bi-table me-2"></i>Phase 1 — Google Sheets : votre liste de titres</span>
+            <span class="phase-time">Fourni par le formateur</span>
+          </div>
+          <div class="phase-body">
+            <div class="sr">
+              <span class="srn sh">1</span>
+              <span>Ouvrir le Google Sheets partagé avec la classe — les titres IA ont été <strong>générés par une IA</strong> au préalable.</span>
+            </div>
+            <div class="sr">
+              <span class="srn sh">2</span>
+              <span><strong>Choisir un titre</strong> dans la liste et inscrire votre prénom dans la colonne "Auteur" pour le réserver.</span>
+            </div>
+            <div class="sr">
+              <span class="srn sh">3</span>
+              <span>Copier le titre exact — il sera le <strong>point de départ</strong> de votre prompt IA.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sheets preview mock -->
+        <div class="sheets-mock mb-4 aos d2">
+          <div class="sheets-header">
+            <i class="bi bi-table" style="font-size:14px;color:#fff;"></i>
+            <span>Titres IA — M12 Veille Technologique</span>
+          </div>
+          <div class="sheets-row">
+            <div class="sh-cell num">#</div>
+            <div class="sh-cell hdr" style="flex:3;">Titre de l'article</div>
+            <div class="sh-cell hdr">Catégorie</div>
+            <div class="sh-cell hdr">Statut</div>
+          </div>
+          <div class="sheets-row">
+            <div class="sh-cell num">1</div>
+            <div class="sh-cell ttl" style="flex:3;">Comment les LLMs transforment la recherche scientifique</div>
+            <div class="sh-cell tag">NLP</div>
+            <div class="sh-cell st"><span class="status-done">✓ Fait</span></div>
+          </div>
+          <div class="sheets-row">
+            <div class="sh-cell num">2</div>
+            <div class="sh-cell ttl" style="flex:3;">Vision par ordinateur : 5 applications médicales en 2025</div>
+            <div class="sh-cell tag">Vision</div>
+            <div class="sh-cell st"><span class="status-wip">✍ En cours</span></div>
+          </div>
+          <div class="sheets-row">
+            <div class="sh-cell num">3</div>
+            <div class="sh-cell ttl" style="flex:3;">Les agents IA autonomes : mythe ou réalité en entreprise ?</div>
+            <div class="sh-cell tag">Agents</div>
+            <div class="sh-cell st"><span class="status-todo">À faire</span></div>
+          </div>
+          <div class="sheets-row">
+            <div class="sh-cell num">4</div>
+            <div class="sh-cell ttl" style="flex:3;">DALL-E 3 vs Midjourney : comparatif pour la veille créative</div>
+            <div class="sh-cell tag">Génératif</div>
+            <div class="sh-cell st"><span class="status-todo">À faire</span></div>
+          </div>
+          <div class="sheets-row" style="border:none;">
+            <div class="sh-cell num">5</div>
+            <div class="sh-cell ttl" style="flex:3;">Comment évaluer un modèle IA : métriques essentielles</div>
+            <div class="sh-cell tag">Évaluation</div>
+            <div class="sh-cell st"><span class="status-todo">À faire</span></div>
+          </div>
+        </div>
+
+        <!-- Phase 2: AI generation -->
+        <div class="phase-card aos d3">
+          <div class="phase-head ph-ai">
+            <span class="phase-title"><i class="bi bi-robot me-2"></i>Phase 2 — Générer l'article avec l'IA</span>
+            <span class="phase-time">Claude / ChatGPT</span>
+          </div>
+          <div class="phase-body">
+            <div class="sr">
+              <span class="srn ai">1</span>
+              <span>Ouvrir <strong>claude.ai</strong> ou <strong>chat.openai.com</strong> et utiliser le prompt de génération ci-contre.</span>
+            </div>
+            <div class="sr">
+              <span class="srn ai">2</span>
+              <span><strong>Vérifier et corriger</strong> le contenu généré — l'IA peut faire des erreurs factuelles.</span>
+            </div>
+            <div class="sr" style="border:none;">
+              <span class="srn ai">3</span>
+              <span>Copier le texte final, prêt pour Blogger.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: prompts + image -->
+      <div class="col-lg-6">
+
+        <!-- Prompt article -->
+        <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:8px;" class="aos d1">Prompt — Générer l'article</span>
+        <div class="prompt-box aos d2">
+          <div class="prompt-head">
+            <i class="bi bi-chat-dots" style="font-size:14px;color:#fff;"></i>
+            <span>ChatGPT / Claude</span>
+          </div>
+          <div class="prompt-body">
+            "Tu es un <em>expert en veille technologique IA</em>.<br/>
+            Rédige un article de blog <em>complet en français</em> sur le sujet suivant :<br/>
+            <em style="color:var(--bd);font-weight:700;">[Titre choisi dans Google Sheets]</em><br/><br/>
+            Structure attendue :<br/>
+            • <em>Introduction</em> (2-3 phrases accrocheuses)<br/>
+            • <em>3 à 4 sections</em> avec sous-titres clairs<br/>
+            • <em>Conclusion</em> avec un appel à l'action<br/>
+            • <em>5 hashtags</em> pertinents pour Blogger<br/><br/>
+            Ton : <em>accessible pour un étudiant TS 1ère année en IA</em>."
+          </div>
+        </div>
+
+        <!-- Prompt image -->
+        <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin:14px 0 8px;" class="aos d3">Prompt — Générer l'image de couverture</span>
+        <div class="prompt-box aos d3" style="border-color:#CE93D8;">
+          <div class="prompt-head" style="background:var(--img);">
+            <i class="bi bi-image" style="font-size:14px;color:#fff;"></i>
+            <span>DALL-E / Canva IA / Bing Image Creator</span>
+          </div>
+          <div class="prompt-body">
+            "A <em>clean, modern and professional</em> blog cover image<br/>
+            about <em>[thème de votre article]</em>.<br/>
+            Style : <em>flat design, blue and white tones</em>,<br/>
+            minimalist, tech-oriented.<br/>
+            Format : <em>16:9, 1280x720 pixels</em>."
+          </div>
+        </div>
+
+        <!-- Tools list -->
+        <div class="mt-3 aos d4">
+          <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:8px;">Outils de génération d'images recommandés</span>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="tbadge img" style="font-size:12px;padding:5px 12px;"><i class="bi bi-stars"></i>DALL-E (ChatGPT Plus)</span>
+            <span class="tbadge img" style="font-size:12px;padding:5px 12px;"><i class="bi bi-brush"></i>Canva IA (gratuit)</span>
+            <span class="tbadge img" style="font-size:12px;padding:5px 12px;"><i class="bi bi-microsoft"></i>Bing Image Creator</span>
+          </div>
+        </div>
+
+        <!-- Blogger tip -->
+        <div class="qbox mt-3 aos d5">
+          <strong>Sur Blogger :</strong> Nouveau post → coller le texte → ajouter image → Tags = hashtags IA générés →
+          <strong>Publier</strong>. Copier l'URL et la coller dans Google Sheets colonne "Lien".
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 3 — MISSIONS INTERACTIVES
+══════════════════════════════════════════ -->
+<div class="page p3" id="p2">
+  <div class="ghost lt">GO</div>
+  <div class="container">
+
+    <div class="sbar aos">
+      <span class="sn">03</span>
+      <span class="st">Travail interactif — À vous de jouer en autonomie</span>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: 4 missions -->
+      <div class="col-lg-7">
+
+        <div class="mc aos d1">
+          <div class="mc-head m1">
+            <span class="mc-title"><i class="bi bi-table me-2"></i>Mission 1 — Google Sheets : choisir votre titre</span>
+            <span class="mc-time">10 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="ms"><span class="mn sh">1</span><span>Ouvrir le <strong>Google Sheets partagé</strong> (lien sur Google Classroom)</span></div>
+            <div class="ms"><span class="mn sh">2</span><span>Parcourir les titres disponibles et en choisir <strong>un non réservé</strong></span></div>
+            <div class="ms"><span class="mn sh">3</span><span>Inscrire votre <strong>prénom dans la colonne Auteur</strong> pour réserver le titre</span></div>
+            <div class="ms" style="border:none;"><span class="mn sh">4</span><span>Copier le titre exact — ce sera votre point de départ</span></div>
+          </div>
+        </div>
+
+        <div class="mc aos d2">
+          <div class="mc-head m2">
+            <span class="mc-title"><i class="bi bi-robot me-2"></i>Mission 2 — Générer l'article avec l'IA</span>
+            <span class="mc-time">25 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="ms"><span class="mn ai">1</span><span>Ouvrir <strong>claude.ai</strong> ou <strong>chat.openai.com</strong></span></div>
+            <div class="ms"><span class="mn ai">2</span><span>Utiliser le <strong>prompt de génération</strong> de la page 2 avec votre titre</span></div>
+            <div class="ms"><span class="mn ai">3</span><span><strong>Lire et corriger</strong> le texte généré — vérifier les faits et reformuler si nécessaire</span></div>
+            <div class="ms" style="border:none;"><span class="mn ai">4</span><span>Copier le texte final dans un <strong>Google Doc</strong> pour le garder</span></div>
+          </div>
+        </div>
+
+        <div class="mc aos d3">
+          <div class="mc-head m3">
+            <span class="mc-title"><i class="bi bi-image me-2"></i>Mission 3 — Créer l'image de couverture</span>
+            <span class="mc-time">15 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="ms"><span class="mn img">1</span><span>Ouvrir <strong>Canva IA</strong>, <strong>Bing Image Creator</strong> ou <strong>DALL-E</strong></span></div>
+            <div class="ms"><span class="mn img">2</span><span>Utiliser le <strong>prompt image</strong> de la page 2 adapté à votre thème</span></div>
+            <div class="ms"><span class="mn img">3</span><span>Générer plusieurs variantes et <strong>choisir la meilleure</strong></span></div>
+            <div class="ms" style="border:none;"><span class="mn img">4</span><span><strong>Télécharger</strong> l'image en format 16:9 (PNG ou JPG)</span></div>
+          </div>
+        </div>
+
+        <div class="mc aos d4">
+          <div class="mc-head m4">
+            <span class="mc-title"><i class="bi bi-rss me-2"></i>Mission 4 — Publier sur Blogger</span>
+            <span class="mc-time">15 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="ms"><span class="mn blg">1</span><span>Ouvrir <strong>blogger.com</strong> et créer un <strong>Nouveau post</strong></span></div>
+            <div class="ms"><span class="mn blg">2</span><span>Coller le <strong>texte de l'article</strong> — mettre en forme (titres, paragraphes, gras)</span></div>
+            <div class="ms"><span class="mn blg">3</span><span>Ajouter l'<strong>image de couverture</strong> en haut du post</span></div>
+            <div class="ms"><span class="mn blg">4</span><span>Ajouter les <strong>5 hashtags / tags</strong> générés par l'IA dans le champ Tags</span></div>
+            <div class="ms" style="border:none;"><span class="mn blg">5</span><span>Cliquer <strong>Publier</strong> → copier l'URL → la coller dans Google Sheets colonne "Lien"</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: checklist + livrable -->
+      <div class="col-lg-5">
+
+        <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:8px;" class="aos d2">Checklist de validation</span>
+        <ul class="cklist mb-4 aos d2">
+          <li><span class="ck"></span><span><strong>Titre réservé</strong> dans Google Sheets (prénom inscrit)</span></li>
+          <li><span class="ck"></span><span><strong>Article complet</strong> généré par IA (intro + 3 sections + conclusion)</span></li>
+          <li><span class="ck"></span><span>Contenu <strong>relu et corrigé</strong> par vous-même</span></li>
+          <li><span class="ck"></span><span><strong>Image de couverture</strong> générée par IA (16:9)</span></li>
+          <li><span class="ck"></span><span>Post publié sur <strong>Blogger</strong> avec image + texte + tags</span></li>
+          <li><span class="ck"></span><span><strong>URL du post</strong> copiée dans Google Sheets colonne Lien</span></li>
+          <li><span class="ck"></span><span>Lien partagé dans le <strong>flux Google Classroom</strong></span></li>
+        </ul>
+
+        <!-- Timer visual -->
+        <div class="mb-3 aos d3" style="background:var(--wh);border:1.5px solid var(--blt);border-radius:10px;padding:14px 18px;box-shadow:0 1px 6px var(--shad);">
+          <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:10px;">Répartition du temps</span>
+          <div class="d-flex flex-column gap-2">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--sh);flex-shrink:0;"></div>
+              <div style="flex:1;height:7px;background:var(--sh-lt);border-radius:4px;"><div style="width:15%;height:100%;background:var(--sh);border-radius:4px;"></div></div>
+              <span style="font-family:var(--fm);font-size:11px;color:var(--sh);width:50px;text-align:right;">10 min</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--ai);flex-shrink:0;"></div>
+              <div style="flex:1;height:7px;background:var(--ai-lt);border-radius:4px;"><div style="width:40%;height:100%;background:var(--ai);border-radius:4px;"></div></div>
+              <span style="font-family:var(--fm);font-size:11px;color:var(--ai);width:50px;text-align:right;">25 min</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--img);flex-shrink:0;"></div>
+              <div style="flex:1;height:7px;background:var(--img-lt);border-radius:4px;"><div style="width:23%;height:100%;background:var(--img);border-radius:4px;"></div></div>
+              <span style="font-family:var(--fm);font-size:11px;color:var(--img);width:50px;text-align:right;">15 min</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--bl2);flex-shrink:0;"></div>
+              <div style="flex:1;height:7px;background:var(--bl2-lt);border-radius:4px;"><div style="width:23%;height:100%;background:var(--bl2);border-radius:4px;"></div></div>
+              <span style="font-family:var(--fm);font-size:11px;color:var(--bl2);width:50px;text-align:right;">15 min</span>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between mt-2" style="font-family:var(--fm);font-size:10px;color:var(--muted);">
+            <span>Sheets</span><span>Article IA</span><span>Image IA</span><span>Blogger</span>
+          </div>
+        </div>
+
+        <!-- Livrable -->
+        <div class="livr aos d4">
+          <div class="ll">Livrable — Google Classroom</div>
+          <div class="lt">
+            Partagez dans le flux de la classe :<br/>
+            <strong>1.</strong> L'URL de votre post Blogger publié<br/>
+            <strong>2.</strong> Le prompt IA exact que vous avez utilisé<br/>
+            <strong>3.</strong> Une phrase : qu'avez-vous dû corriger dans le texte généré ?<br/><br/>
+            <strong>Bonus :</strong> Lisez le post d'un camarade et laissez un commentaire constructif.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+<script>
+'use strict';
+const pages=[document.getElementById('p0'),document.getElementById('p1'),document.getElementById('p2')];
+const dots=document.querySelectorAll('.pdot');
+const bar=document.getElementById('pgbar');
+const progress=()=>{const h=document.documentElement.scrollHeight-window.innerHeight;bar.style.width=h>0?(window.scrollY/h*100).toFixed(1)+'%':'0%';};
+const activeDot=()=>{const mid=window.scrollY+window.innerHeight*.42;let a=0;pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)a=i;});dots.forEach((d,i)=>d.classList.toggle('on',i===a));};
+dots.forEach((d,i)=>d.addEventListener('click',()=>{pages[i]?.scrollIntoView({behavior:'smooth',block:'start'});}));
+document.addEventListener('keydown',e=>{
+  const mid=window.scrollY+window.innerHeight*.42;let cur=0;
+  pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)cur=i;});
+  if((e.key==='ArrowDown'||e.key==='ArrowRight'||e.key===' ')&&cur<pages.length-1){e.preventDefault();pages[cur+1].scrollIntoView({behavior:'smooth',block:'start'});}
+  if((e.key==='ArrowUp'||e.key==='ArrowLeft')&&cur>0){e.preventDefault();pages[cur-1].scrollIntoView({behavior:'smooth',block:'start'});}
+});
+let ty=0;
+document.addEventListener('touchstart',e=>{ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dy)>55){const mid=window.scrollY+window.innerHeight*.42;let cur=0;pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)cur=i;});
+  if(dy<0&&cur<pages.length-1)pages[cur+1].scrollIntoView({behavior:'smooth',block:'start'});
+  if(dy>0&&cur>0)pages[cur-1].scrollIntoView({behavior:'smooth',block:'start'});}
+},{passive:true});
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on');});},{threshold:.1});
+document.querySelectorAll('.aos').forEach(el=>obs.observe(el));
+window.addEventListener('scroll',()=>{progress();activeDot();},{passive:true});
+progress();activeDot();
+</script>
+</body>
+</html>
