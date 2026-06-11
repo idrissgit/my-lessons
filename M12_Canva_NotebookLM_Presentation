@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>M12 — Canva AI + NotebookLM | Créer Logo, Bannière, Podcast & Vidéo</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous"/>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet"/>
+
+  <style>
+    :root {
+      --bd:      #0A2A6E;
+      --bm:      #1565C0;
+      --bl:      #1E88E5;
+      --bxl:     #E3F2FD;
+      --bxxl:    #F0F7FF;
+      --blt:     #BBDEFB;
+      --bg:      #F4F8FF;
+      --bg2:     #EBF3FF;
+      --wh:      #FFFFFF;
+
+      /* tool palette */
+      --canva:   #7D2AE8;
+      --canva-lt:#F3E8FF;
+      --canva-md:#9B59B6;
+      --nlm:     #1A73E8;
+      --nlm-lt:  #E8F0FE;
+      --pod:     #00897B;
+      --pod-lt:  #E0F2F1;
+      --vid:     #D32F2F;
+      --vid-lt:  #FFEBEE;
+      --blg:     #FF6D00;
+      --blg-lt:  #FFF3E0;
+
+      --ink:     #0D1B3E;
+      --ink2:    #37475F;
+      --muted:   #7B8BB2;
+      --shad:    rgba(13,35,88,.09);
+      --fh:      'Nunito', sans-serif;
+      --fm:      'Fira Code', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--fh); font-weight: 400; background: var(--bg); color: var(--ink); overflow-x: hidden; }
+    ::selection { background: var(--bm); color: #fff; }
+
+    body { scroll-snap-type: y mandatory; }
+    .page {
+      scroll-snap-align: start;
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+      position: relative; overflow: hidden;
+      padding: 74px 0 50px;
+    }
+    .page::after {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle, #BBDEFB 1px, transparent 1px);
+      background-size: 26px 26px; z-index: 0; pointer-events: none; opacity: .42;
+    }
+    .page.dark::after { opacity: .06; background-image: radial-gradient(circle, rgba(255,255,255,.14) 1px, transparent 1px); }
+    .page > .container { position: relative; z-index: 1; }
+
+    .top-stripe { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--bd), var(--bl), #90CAF9); }
+    .ghost { position: absolute; right: 2%; bottom: -2%; font-family: var(--fh); font-weight: 900; font-size: clamp(80px,12vw,160px); line-height: 1; pointer-events: none; z-index: 0; letter-spacing: -.02em; }
+    .ghost.lt { color: rgba(21,101,192,.05); }
+    .ghost.dk { color: rgba(255,255,255,.04); }
+
+    #pgbar { position: fixed; top: 0; left: 0; height: 4px; background: linear-gradient(90deg, var(--bd), var(--bl), #90CAF9); transition: width .2s; z-index: 1000; }
+    #pager { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+    .pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--blt); border: none; cursor: pointer; transition: all .3s; padding: 0; }
+    .pdot.on { background: var(--bm); transform: scale(1.4); box-shadow: 0 0 0 3px rgba(21,101,192,.18); }
+    .pdot:hover:not(.on) { background: var(--bl); }
+
+    /* ── CHIP ── */
+    .chip { display: inline-flex; align-items: center; gap: 7px; background: var(--bxxl); border: 1.5px solid var(--blt); border-radius: 4px; padding: 5px 14px; font-family: var(--fm); font-size: 11px; color: var(--bm); letter-spacing: .1em; text-transform: uppercase; }
+    .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bl); animation: blink 2s ease infinite; }
+    .chip.wh { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.22); color: rgba(255,255,255,.9); }
+    .chip.wh .dot { background: #90CAF9; }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+    /* ── SECTION BAR ── */
+    .sbar { display: flex; align-items: center; gap: 12px; background: var(--bd); color: #fff; border-radius: 8px; padding: 12px 20px; margin-bottom: 20px; }
+    .sbar .sn { font-family: var(--fm); font-size: 12px; background: rgba(255,255,255,.14); border-radius: 4px; padding: 2px 10px; color: #90CAF9; }
+    .sbar .st { font-family: var(--fh); font-size: 16px; font-weight: 800; }
+
+    /* ── TOOL BADGE ── */
+    .tbadge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 15px; border-radius: 6px; font-family: var(--fh); font-size: 13px; font-weight: 700; }
+    .tbadge.cv  { background: var(--canva-lt); color: var(--canva); border: 1.5px solid #D7AAFF; }
+    .tbadge.nlm { background: var(--nlm-lt);   color: var(--nlm);   border: 1.5px solid #90CAF9; }
+    .tbadge.pod { background: var(--pod-lt);   color: var(--pod);   border: 1.5px solid #80CBC4; }
+    .tbadge.vid { background: var(--vid-lt);   color: var(--vid);   border: 1.5px solid #EF9A9A; }
+    .tbadge.blg { background: var(--blg-lt);   color: var(--blg);   border: 1.5px solid #FFCC02; }
+
+    /* ── PAGE 1 ── */
+    .page.p1 { background: var(--bd); }
+    .obj-pill { display: flex; align-items: flex-start; gap: 13px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 12px 17px; margin-bottom: 9px; }
+    .obj-pill .num { font-family: var(--fh); font-size: 20px; font-weight: 900; color: #90CAF9; opacity: .45; flex-shrink: 0; line-height: 1.1; width: 26px; }
+    .obj-pill .txt { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.78); }
+    .obj-pill .txt strong { color: #fff; font-weight: 700; }
+
+    /* workflow strip */
+    .flow-strip { display: flex; align-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 10px; overflow: hidden; }
+    .fi { flex: 1; text-align: center; padding: 11px 6px; }
+    .fi .fi-ic { font-size: 20px; margin-bottom: 3px; }
+    .fi .fi-nm { font-family: var(--fh); font-size: 11px; font-weight: 700; color: rgba(255,255,255,.88); }
+    .fi .fi-sb { font-family: var(--fm); font-size: 9px; color: rgba(255,255,255,.4); margin-top: 2px; }
+    .farr { padding: 0 3px; font-size: 16px; color: rgba(255,255,255,.18); flex-shrink: 0; }
+
+    /* ── SHARED CARDS ── */
+    .mc { background: var(--wh); border: 1.5px solid var(--blt); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px var(--shad); margin-bottom: 12px; }
+    .mc-h { display: flex; align-items: center; justify-content: space-between; padding: 11px 18px; }
+    .mc-title { font-family: var(--fh); font-size: 14px; font-weight: 800; color: #fff; }
+    .mc-time  { font-family: var(--fm); font-size: 11px; color: rgba(255,255,255,.72); background: rgba(0,0,0,.18); padding: 3px 10px; border-radius: 20px; }
+    .mc-body  { padding: 13px 18px; }
+
+    /* mission header colours */
+    .h-cv  { background: var(--canva); }
+    .h-cv2 { background: var(--canva-md); }
+    .h-nlm { background: var(--nlm); }
+    .h-pod { background: var(--pod); }
+    .h-vid { background: var(--vid); }
+    .h-blg { background: var(--blg); }
+    .h-bd  { background: var(--bd); }
+
+    /* step row */
+    .sr { display: flex; align-items: flex-start; gap: 11px; padding: 7px 0; border-bottom: 1px solid var(--bxxl); font-size: 13.5px; color: var(--ink2); line-height: 1.55; }
+    .sr:last-child { border-bottom: none; }
+    .srn { width: 21px; height: 21px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--fh); font-size: 10px; font-weight: 800; color: #fff; margin-top: 2px; }
+    .sr strong { color: var(--ink); font-weight: 700; }
+
+    /* prompt block */
+    .pb { background: var(--bxxl); border: 1.5px solid var(--blt); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+    .pb-h { display: flex; align-items: center; gap: 8px; padding: 8px 14px; }
+    .pb-h span { font-family: var(--fm); font-size: 11px; color: rgba(255,255,255,.85); letter-spacing: .06em; }
+    .pb-body { padding: 10px 14px; font-family: var(--fm); font-size: 11.5px; line-height: 1.8; color: var(--ink2); background: var(--wh); }
+    .pb-body em { color: var(--bm); font-style: normal; font-weight: 500; }
+
+    /* canva step card */
+    .cv-card { background: var(--wh); border: 1.5px solid var(--blt); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; box-shadow: 0 1px 6px var(--shad); }
+    .cv-card-t { font-family: var(--fh); font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+
+    /* feature row */
+    .feat { display: flex; align-items: flex-start; gap: 12px; padding: 8px 14px; margin-bottom: 7px; border-radius: 8px; font-size: 13.5px; color: var(--ink2); border: 1.5px solid; }
+    .feat strong { color: var(--ink); font-weight: 700; }
+    .feat-icon { font-size: 20px; flex-shrink: 0; }
+
+    /* checklist */
+    .ck-list { list-style: none; padding: 0; margin: 0; }
+    .ck-list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; margin-bottom: 6px; background: var(--wh); border: 1.5px solid var(--bxxl); border-radius: 8px; font-size: 13px; color: var(--ink2); box-shadow: 0 1px 4px var(--shad); }
+    .ck-list li .ck { width: 19px; height: 19px; border-radius: 4px; flex-shrink: 0; border: 1.5px solid var(--blt); background: var(--bxxl); margin-top: 1px; }
+    .ck-list li strong { color: var(--ink); font-weight: 700; }
+
+    /* livrable */
+    .livr { background: var(--bd); border-radius: 10px; padding: 16px 20px; }
+    .livr .ll { font-family: var(--fm); font-size: 10px; color: #90CAF9; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 6px; }
+    .livr .lt { font-size: 13.5px; color: rgba(255,255,255,.82); line-height: 1.8; }
+    .livr .lt strong { color: #fff; }
+
+    /* quote */
+    .qbox { border-left: 3px solid var(--bl); padding: 12px 18px; background: var(--bxxl); border-radius: 0 8px 8px 0; font-size: 13.5px; line-height: 1.75; color: var(--ink2); }
+    .qbox strong { color: var(--bd); font-weight: 700; }
+
+    /* timer bars */
+    .tbar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .tbar-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .tbar-track { flex: 1; height: 7px; background: var(--bxxl); border-radius: 4px; overflow: hidden; }
+    .tbar-fill { height: 100%; border-radius: 4px; }
+    .tbar-label { font-family: var(--fm); font-size: 11px; width: 45px; text-align: right; flex-shrink: 0; }
+
+    /* NLM mock */
+    .nlm-card { background: var(--wh); border: 1.5px solid #90CAF9; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px var(--shad); }
+    .nlm-header { background: var(--nlm); padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+    .nlm-header span { font-family: var(--fh); font-size: 13px; font-weight: 700; color: #fff; }
+    .nlm-source { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--bxl); }
+    .nlm-source .src-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .nlm-source .src-nm { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .nlm-source .src-tp { font-family: var(--fm); font-size: 10px; color: var(--muted); }
+    .nlm-output { padding: 10px 14px; background: var(--nlm-lt); }
+    .nlm-out-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(26,115,232,.1); font-size: 13px; color: var(--ink2); }
+    .nlm-out-item:last-child { border-bottom: none; }
+    .nlm-out-item i { color: var(--nlm); flex-shrink: 0; }
+
+    /* AOS */
+    .aos { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s ease; }
+    .aos.on { opacity: 1; transform: none; }
+    .d1{transition-delay:.07s} .d2{transition-delay:.14s} .d3{transition-delay:.21s}
+    .d4{transition-delay:.28s} .d5{transition-delay:.35s} .d6{transition-delay:.42s}
+
+    @media(max-width:768px){ #pager{display:none;} .page{min-height:auto;padding:56px 0 36px;} body{scroll-snap-type:none;} }
+  </style>
+</head>
+<body>
+
+<div id="pgbar" style="width:0%"></div>
+<nav id="pager">
+  <button class="pdot on"  data-i="0" title="Titre & Objectifs"></button>
+  <button class="pdot"     data-i="1" title="Canva AI"></button>
+  <button class="pdot"     data-i="2" title="NotebookLM"></button>
+  <button class="pdot"     data-i="3" title="Missions & Livrable"></button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — TITRE, OBJECTIFS & WORKFLOW
+══════════════════════════════════════════ -->
+<div class="page p1 dark" id="p0">
+  <div class="top-stripe"></div>
+  <div class="ghost dk">CREATE</div>
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- LEFT -->
+      <div class="col-lg-6">
+        <div class="chip wh mb-4 aos"><span class="dot"></span>Module M12 &nbsp;·&nbsp; Séance Canva AI + NotebookLM</div>
+        <h1 class="aos d1" style="font-family:var(--fh);font-weight:900;font-size:clamp(30px,4.8vw,60px);line-height:1.06;color:#fff;">
+          Logo · Bannière<br>
+          <span style="color:#CE93D8;">Images</span> ·
+          <span style="color:#80CBC4;">Podcast</span> ·
+          <span style="color:#EF9A9A;">Vidéo</span>
+        </h1>
+        <p class="aos d2" style="font-size:1rem;font-weight:400;line-height:1.85;color:rgba(255,255,255,.72);max-width:460px;margin-top:12px;">
+          À partir de votre article Blogger déjà publié,
+          créez tous les visuels avec <strong style="color:#CE93D8;">Canva AI</strong>
+          puis transformez votre article en <strong style="color:#80CBC4;">podcast</strong>
+          et en <strong style="color:#EF9A9A;">vidéo</strong> grâce à
+          <strong style="color:#90CAF9;">Google NotebookLM</strong>.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-4 aos d3">
+          <span class="tbadge cv"><i class="bi bi-palette2"></i>Canva AI</span>
+          <span class="tbadge nlm"><i class="bi bi-journal-bookmark"></i>NotebookLM</span>
+          <span class="tbadge pod"><i class="bi bi-mic-fill"></i>Podcast</span>
+          <span class="tbadge vid"><i class="bi bi-camera-video-fill"></i>Vidéo</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: objectives + workflow -->
+      <div class="col-lg-6 aos d2">
+        <span style="font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.13em;text-transform:uppercase;display:block;margin-bottom:10px;">Objectifs</span>
+
+        <div class="obj-pill">
+          <div class="num">01</div>
+          <div class="txt">Créer un <strong>logo personnalisé</strong> et une <strong>bannière de blog</strong> avec Canva AI en quelques clics.</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">02</div>
+          <div class="txt">Générer des <strong>images de posts</strong> adaptées à Blogger avec le générateur IA de Canva.</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">03</div>
+          <div class="txt">Transformer votre article en <strong>podcast audio</strong> avec Google NotebookLM (2 voix IA).</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">04</div>
+          <div class="txt">Exporter et intégrer <strong>visuels + podcast</strong> directement dans votre blog Blogger.</div>
+        </div>
+
+        <!-- workflow -->
+        <div class="flow-strip mt-4">
+          <div class="fi"><div class="fi-ic">📝</div><div class="fi-nm">Article Blogger</div><div class="fi-sb">Déjà publié</div></div>
+          <div class="farr"><i class="bi bi-arrow-right"></i></div>
+          <div class="fi"><div class="fi-ic">🎨</div><div class="fi-nm">Canva AI</div><div class="fi-sb">Logo · Bannière · Images</div></div>
+          <div class="farr"><i class="bi bi-arrow-right"></i></div>
+          <div class="fi"><div class="fi-ic">🎙️</div><div class="fi-nm">NotebookLM</div><div class="fi-sb">Podcast · Vidéo</div></div>
+          <div class="farr"><i class="bi bi-arrow-right"></i></div>
+          <div class="fi"><div class="fi-ic">🚀</div><div class="fi-nm">Publier</div><div class="fi-sb">Blog enrichi</div></div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 mt-4" style="opacity:.33;">
+          <div style="height:2px;width:28px;background:#90CAF9;border-radius:2px;"></div>
+          <span style="font-family:var(--fm);font-size:11px;color:#90CAF9;letter-spacing:.1em;">01 / 04 — ↓ ou Espace</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — CANVA AI : LOGO, BANNIÈRE, IMAGES
+══════════════════════════════════════════ -->
+<div class="page" style="background:var(--wh);" id="p1">
+  <div class="ghost lt">DESIGN</div>
+  <div class="container">
+
+    <div class="sbar aos">
+      <span class="sn">02</span>
+      <span class="st">Canva AI — Créer Logo, Bannière et Images de Posts</span>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: 3 creation cards -->
+      <div class="col-lg-7">
+
+        <!-- Logo -->
+        <div class="cv-card aos d1" style="border-color:#D7AAFF;">
+          <div class="cv-card-t" style="color:var(--canva);">
+            <i class="bi bi-star-fill me-2"></i>Création 1 — Logo de votre Blog IA
+          </div>
+          <div class="sr"><span class="srn" style="background:var(--canva);">1</span><span>Sur <strong>canva.com</strong>, cliquer <em>Créer un design</em> → chercher <strong>"Logo"</strong></span></div>
+          <div class="sr"><span class="srn" style="background:var(--canva);">2</span><span>Cliquer sur <strong>Apps → Text to Image</strong> (ou "Générer une image") dans la barre latérale</span></div>
+          <div class="sr"><span class="srn" style="background:var(--canva);">3</span><span>Utiliser le prompt ci-dessous adapté à votre thème IA → générer plusieurs variantes</span></div>
+          <div class="sr" style="border:none;"><span class="srn" style="background:var(--canva);">4</span><span>Choisir la meilleure version → ajouter le nom de votre blog → <strong>Télécharger en PNG</strong></span></div>
+          <div class="pb mt-2" style="border-color:#D7AAFF;">
+            <div class="pb-h" style="background:var(--canva);">
+              <i class="bi bi-magic" style="font-size:13px;color:#fff;"></i>
+              <span>Prompt Logo — Canva AI</span>
+            </div>
+            <div class="pb-body">"A <em>minimalist modern logo</em> for an AI technology blog.<br/>
+Style: <em>clean, flat design</em>, blue and white, tech-oriented.<br/>
+No text, <em>geometric shapes</em>, professional look."</div>
+          </div>
+        </div>
+
+        <!-- Bannière -->
+        <div class="cv-card aos d2" style="border-color:#90CAF9;">
+          <div class="cv-card-t" style="color:var(--bm);">
+            <i class="bi bi-image me-2"></i>Création 2 — Bannière de Blog (1600 × 400 px)
+          </div>
+          <div class="sr"><span class="srn" style="background:var(--bm);">1</span><span>Créer un design → taille personnalisée → <strong>1600 × 400 px</strong></span></div>
+          <div class="sr"><span class="srn" style="background:var(--bm);">2</span><span>Apps → Text to Image → générer un fond avec le prompt ci-dessous</span></div>
+          <div class="sr" style="border:none;"><span class="srn" style="background:var(--bm);">3</span><span>Ajouter le titre de votre blog par-dessus en texte + logo → <strong>Télécharger PNG</strong></span></div>
+          <div class="pb mt-2">
+            <div class="pb-h" style="background:var(--bm);">
+              <i class="bi bi-magic" style="font-size:13px;color:#fff;"></i>
+              <span>Prompt Bannière — Canva AI</span>
+            </div>
+            <div class="pb-body">"A wide <em>blog banner background</em> for an AI & technology blog.<br/>
+Abstract <em>circuit board patterns</em>, deep blue and white.<br/>
+<em>High resolution, clean and modern</em>, no text."</div>
+          </div>
+        </div>
+
+        <!-- Image de post -->
+        <div class="cv-card aos d3" style="border-color:#FFCC02;">
+          <div class="cv-card-t" style="color:var(--blg);">
+            <i class="bi bi-card-image me-2"></i>Création 3 — Image de couverture pour votre Post
+          </div>
+          <div class="sr"><span class="srn" style="background:var(--blg);">1</span><span>Canva → Nouveau design → <strong>Présentation (16:9)</strong> ou <strong>1280 × 720 px</strong></span></div>
+          <div class="sr"><span class="srn" style="background:var(--blg);">2</span><span>Text to Image → générer une image liée au <strong>sujet de votre article Blogger</strong></span></div>
+          <div class="sr" style="border:none;"><span class="srn" style="background:var(--blg);">3</span><span>Ajouter le titre de l'article en texte → <strong>Télécharger</strong> → uploader sur Blogger</span></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Canva features + tips -->
+      <div class="col-lg-5">
+
+        <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:10px;" class="aos d1">Fonctionnalités IA clés de Canva</span>
+
+        <div class="feat aos d1" style="background:var(--canva-lt); border-color:#D7AAFF;">
+          <span class="feat-icon">✨</span>
+          <div><strong>Text to Image</strong><br><span style="font-size:13px;">Décrivez une image en texte → Canva la génère en quelques secondes dans votre design.</span></div>
+        </div>
+        <div class="feat aos d2" style="background:var(--bxxl); border-color:var(--blt);">
+          <span class="feat-icon">🪄</span>
+          <div><strong>Magic Design</strong><br><span style="font-size:13px;">Décrivez votre projet → Canva génère automatiquement des templates complets.</span></div>
+        </div>
+        <div class="feat aos d2" style="background:var(--bxxl); border-color:var(--blt);">
+          <span class="feat-icon">🖼️</span>
+          <div><strong>Background Remover</strong><br><span style="font-size:13px;">Supprimez le fond d'une image en 1 clic pour intégrer dans vos designs.</span></div>
+        </div>
+        <div class="feat aos d3" style="background:var(--canva-lt); border-color:#D7AAFF;">
+          <span class="feat-icon">📐</span>
+          <div><strong>Magic Resize</strong><br><span style="font-size:13px;">Adaptez un design créé pour tous les formats (logo, bannière, post) en 1 clic.</span></div>
+        </div>
+
+        <div class="qbox mt-3 aos d4">
+          <strong>Accès Canva :</strong> canva.com → créer un compte gratuit avec Gmail.
+          Toutes les fonctionnalités IA de base sont disponibles <strong>gratuitement</strong>
+          pour les étudiants.
+        </div>
+
+        <div class="mt-3 p-3 rounded aos d4" style="background:var(--bxxl);border:1.5px solid var(--blt);">
+          <div style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Tailles recommandées</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--ink2);">Logo</span><span style="font-family:var(--fm);color:var(--bm);">500 × 500 px (PNG)</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--ink2);">Bannière blog</span><span style="font-family:var(--fm);color:var(--bm);">1600 × 400 px</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--ink2);">Image de post</span><span style="font-family:var(--fm);color:var(--bm);">1280 × 720 px</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 3 — GOOGLE NOTEBOOKLM : PODCAST & VIDÉO
+══════════════════════════════════════════ -->
+<div class="page" style="background:var(--bg2);" id="p2">
+  <div class="ghost lt">AUDIO</div>
+  <div class="container">
+
+    <div class="sbar aos">
+      <span class="sn">03</span>
+      <span class="st">Google NotebookLM — Transformer votre article en Podcast et Vidéo</span>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: NotebookLM expliqué + steps -->
+      <div class="col-lg-6">
+
+        <!-- What is NotebookLM -->
+        <div class="mc aos d1">
+          <div class="mc-h h-nlm">
+            <span class="mc-title"><i class="bi bi-journal-bookmark me-2"></i>Qu'est-ce que Google NotebookLM ?</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr">
+              <span class="feat-icon" style="font-size:16px;flex-shrink:0;margin-top:2px;">🧠</span>
+              <span>Un outil IA de Google qui <strong>analyse vos documents</strong> (articles, PDFs, textes) et génère des résumés, réponses et — surtout — un <strong>podcast audio automatique</strong>.</span>
+            </div>
+            <div class="sr" style="border:none;">
+              <span class="feat-icon" style="font-size:16px;flex-shrink:0;margin-top:2px;">🎙️</span>
+              <span>La fonctionnalité <strong>"Audio Overview"</strong> génère une <strong>conversation entre 2 voix IA</strong> qui discutent de votre article — comme un vrai podcast de veille !</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- NLM mock -->
+        <div class="nlm-card aos d2">
+          <div class="nlm-header">
+            <i class="bi bi-journal-bookmark" style="font-size:14px;color:#fff;"></i>
+            <span>NotebookLM · Votre article IA</span>
+          </div>
+          <div class="nlm-source">
+            <div class="src-icon" style="background:var(--blg-lt);"><i class="bi bi-rss" style="color:var(--blg);font-size:14px;"></i></div>
+            <div><div class="src-nm">Article Blogger — [Votre titre IA]</div><div class="src-tp">URL · Ajouté comme source</div></div>
+          </div>
+          <div class="nlm-output">
+            <div style="font-family:var(--fm);font-size:10px;color:var(--nlm);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">Sorties générées</div>
+            <div class="nlm-out-item"><i class="bi bi-mic-fill"></i><span><strong>Audio Overview</strong> — Podcast 2 voix (3–5 min)</span><span style="margin-left:auto;font-family:var(--fm);font-size:10px;background:var(--pod-lt);color:var(--pod);padding:2px 8px;border-radius:10px;">Généré !</span></div>
+            <div class="nlm-out-item"><i class="bi bi-list-ul"></i><span><strong>Guide d'étude</strong> — Points clés résumés</span></div>
+            <div class="nlm-out-item"><i class="bi bi-question-circle"></i><span><strong>FAQ automatique</strong> — Questions / Réponses</span></div>
+            <div class="nlm-out-item" style="border:none;"><i class="bi bi-chat-left-text"></i><span><strong>Chat IA</strong> — Posez des questions sur votre article</span></div>
+          </div>
+        </div>
+
+        <!-- Podcast steps -->
+        <div class="mc mt-3 aos d3">
+          <div class="mc-h h-pod">
+            <span class="mc-title"><i class="bi bi-mic-fill me-2"></i>Générer votre Podcast (Audio Overview)</span>
+            <span class="mc-time">5 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr"><span class="srn" style="background:var(--pod);">1</span><span>Aller sur <strong>notebooklm.google.com</strong> → connexion Gmail</span></div>
+            <div class="sr"><span class="srn" style="background:var(--pod);">2</span><span>Cliquer <strong>"Nouveau notebook"</strong> → ajouter votre article Blogger comme source (URL ou coller le texte)</span></div>
+            <div class="sr"><span class="srn" style="background:var(--pod);">3</span><span>Cliquer sur <strong>"Audio Overview"</strong> dans le panneau droit → Generate</span></div>
+            <div class="sr"><span class="srn" style="background:var(--pod);">4</span><span>Attendre 1-2 minutes → écouter le podcast généré → cliquer <strong>Télécharger</strong> (MP3)</span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--pod);">5</span><span>Intégrer le MP3 dans votre post Blogger via un lecteur audio (HTML embed)</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Vidéo + tips -->
+      <div class="col-lg-6">
+
+        <!-- Vidéo section -->
+        <div class="mc aos d2">
+          <div class="mc-h h-vid">
+            <span class="mc-title"><i class="bi bi-camera-video-fill me-2"></i>Créer une Vidéo à partir de l'article</span>
+            <span class="mc-time">Bonus</span>
+          </div>
+          <div class="mc-body">
+            <div class="qbox mb-3" style="border-color:var(--vid);background:var(--vid-lt);">
+              <strong>Méthode recommandée :</strong> Canva Video + le texte de votre podcast comme script de narration.
+            </div>
+            <div class="sr"><span class="srn" style="background:var(--vid);">1</span><span>Sur Canva → Nouveau design → <strong>Présentation vidéo</strong> (16:9)</span></div>
+            <div class="sr"><span class="srn" style="background:var(--vid);">2</span><span>Ajouter <strong>5 à 6 slides</strong> : titre, points clés de l'article (issus du podcast NLM)</span></div>
+            <div class="sr"><span class="srn" style="background:var(--vid);">3</span><span>Utiliser <strong>Text to Image</strong> sur chaque slide pour ajouter des visuels IA</span></div>
+            <div class="sr"><span class="srn" style="background:var(--vid);">4</span><span>Cliquer <strong>Présenter → Enregistrer</strong> pour enregistrer avec votre voix ou en mode silencieux</span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--vid);">5</span><span>Télécharger en <strong>MP4</strong> → poster sur YouTube ou intégrer dans Blogger</span></div>
+          </div>
+        </div>
+
+        <!-- Tips for podcast integration -->
+        <div class="mt-3 aos d3">
+          <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:8px;">Intégrer le podcast dans Blogger</span>
+          <div class="pb" style="border-color:#80CBC4;">
+            <div class="pb-h" style="background:var(--pod);">
+              <i class="bi bi-code-slash" style="font-size:13px;color:#fff;"></i>
+              <span>Code HTML — Lecteur audio dans Blogger</span>
+            </div>
+            <div class="pb-body">&lt;audio controls&gt;<br/>
+&nbsp;&nbsp;&lt;source src="<em>URL_DE_VOTRE_MP3</em>" type="audio/mpeg"&gt;<br/>
+&nbsp;&nbsp;Votre navigateur ne supporte pas l'audio.<br/>
+&lt;/audio&gt;</div>
+          </div>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.6;">
+            Dans Blogger → Modifier le post → Passer en mode <strong>HTML</strong> → Coller ce code là où vous voulez le lecteur.
+          </p>
+        </div>
+
+        <div class="qbox mt-3 aos d4">
+          <strong>NotebookLM est gratuit</strong> avec un compte Google.
+          Accès sur <strong>notebooklm.google.com</strong>.
+          L'Audio Overview est disponible en anglais et de plus en plus en français.
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 4 — MISSIONS & LIVRABLE
+══════════════════════════════════════════ -->
+<div class="page" style="background:var(--bg);" id="p3">
+  <div class="ghost lt">MISSION</div>
+  <div class="container">
+
+    <div class="sbar aos">
+      <span class="sn">04</span>
+      <span class="st">Travail interactif — Vos missions du jour</span>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: 4 missions -->
+      <div class="col-lg-7">
+
+        <div class="mc aos d1">
+          <div class="mc-h" style="background:var(--canva);">
+            <span class="mc-title"><i class="bi bi-star-fill me-2"></i>Mission 1 — Logo de votre Blog</span>
+            <span class="mc-time">15 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr"><span class="srn" style="background:var(--canva);">1</span><span>Ouvrir <strong>canva.com</strong> → Créer un design → Logo</span></div>
+            <div class="sr"><span class="srn" style="background:var(--canva);">2</span><span>Apps → Text to Image → utiliser le <strong>prompt logo</strong> de la page 2</span></div>
+            <div class="sr"><span class="srn" style="background:var(--canva);">3</span><span>Ajouter le <strong>nom de votre blog</strong> → personnaliser couleurs</span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--canva);">4</span><span>Télécharger en <strong>PNG 500×500</strong> → uploader sur Blogger dans le profil du blog</span></div>
+          </div>
+        </div>
+
+        <div class="mc aos d2">
+          <div class="mc-h h-cv2">
+            <span class="mc-title"><i class="bi bi-image me-2"></i>Mission 2 — Bannière + Image de Post</span>
+            <span class="mc-time">15 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr"><span class="srn" style="background:var(--canva-md);">1</span><span>Créer la <strong>bannière</strong> (1600×400) avec le prompt bannière — voir page 2</span></div>
+            <div class="sr"><span class="srn" style="background:var(--canva-md);">2</span><span>Créer l'<strong>image de couverture</strong> (1280×720) pour votre article Blogger existant</span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--canva-md);">3</span><span>Aller sur Blogger → <strong>Mise en page</strong> → uploader bannière → modifier le post pour ajouter l'image</span></div>
+          </div>
+        </div>
+
+        <div class="mc aos d3">
+          <div class="mc-h h-pod">
+            <span class="mc-title"><i class="bi bi-mic-fill me-2"></i>Mission 3 — Podcast avec NotebookLM</span>
+            <span class="mc-time">15 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr"><span class="srn" style="background:var(--pod);">1</span><span>Aller sur <strong>notebooklm.google.com</strong> → Nouveau notebook</span></div>
+            <div class="sr"><span class="srn" style="background:var(--pod);">2</span><span>Ajouter <strong>l'URL de votre article Blogger</strong> comme source</span></div>
+            <div class="sr"><span class="srn" style="background:var(--pod);">3</span><span>Cliquer <strong>Audio Overview → Generate</strong> → attendre la génération</span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--pod);">4</span><span>Télécharger le MP3 → intégrer dans Blogger avec le code HTML fourni en page 3</span></div>
+          </div>
+        </div>
+
+        <div class="mc aos d4">
+          <div class="mc-h h-vid">
+            <span class="mc-title"><i class="bi bi-camera-video-fill me-2"></i>Mission 4 — Vidéo (Bonus)</span>
+            <span class="mc-time">Bonus 15 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr"><span class="srn" style="background:var(--vid);">1</span><span>Canva → Présentation vidéo → 5 slides sur votre article</span></div>
+            <div class="sr"><span class="srn" style="background:var(--vid);">2</span><span>Ajouter <strong>images IA</strong> sur chaque slide (Text to Image)</span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--vid);">3</span><span>Enregistrer → Télécharger <strong>MP4</strong> → intégrer ou lier dans Blogger</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: checklist + timer + livrable -->
+      <div class="col-lg-5">
+
+        <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:8px;" class="aos d2">Checklist de validation</span>
+        <ul class="ck-list mb-3 aos d2">
+          <li><span class="ck"></span><span><strong>Logo</strong> créé avec Canva AI et uploadé sur Blogger</span></li>
+          <li><span class="ck"></span><span><strong>Bannière de blog</strong> créée et mise en ligne</span></li>
+          <li><span class="ck"></span><span><strong>Image de couverture</strong> du post mise à jour sur Blogger</span></li>
+          <li><span class="ck"></span><span><strong>Notebook NotebookLM</strong> créé avec l'article comme source</span></li>
+          <li><span class="ck"></span><span><strong>Podcast MP3</strong> généré et intégré dans le post Blogger</span></li>
+          <li><span class="ck"></span><span>URL du blog enrichi partagée sur <strong>Google Classroom</strong></span></li>
+          <li><span class="ck"></span><span>[Bonus] <strong>Vidéo MP4</strong> créée et intégrée ou uploadée</span></li>
+        </ul>
+
+        <!-- Timer bars -->
+        <div class="mb-3 aos d3" style="background:var(--wh);border:1.5px solid var(--blt);border-radius:10px;padding:14px 18px;box-shadow:0 1px 6px var(--shad);">
+          <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:10px;">Répartition du temps</span>
+          <div class="tbar-row"><div class="tbar-dot" style="background:var(--canva);"></div><div class="tbar-track"><div class="tbar-fill" style="width:25%;background:var(--canva);"></div></div><span class="tbar-label" style="color:var(--canva);">15 min</span></div>
+          <div class="tbar-row"><div class="tbar-dot" style="background:var(--canva-md);"></div><div class="tbar-track"><div class="tbar-fill" style="width:25%;background:var(--canva-md);"></div></div><span class="tbar-label" style="color:var(--canva-md);">15 min</span></div>
+          <div class="tbar-row"><div class="tbar-dot" style="background:var(--pod);"></div><div class="tbar-track"><div class="tbar-fill" style="width:25%;background:var(--pod);"></div></div><span class="tbar-label" style="color:var(--pod);">15 min</span></div>
+          <div class="tbar-row" style="margin-bottom:0;"><div class="tbar-dot" style="background:var(--vid);"></div><div class="tbar-track"><div class="tbar-fill" style="width:25%;background:var(--vid);"></div></div><span class="tbar-label" style="color:var(--vid);">Bonus</span></div>
+          <div class="d-flex justify-content-between mt-2" style="font-family:var(--fm);font-size:10px;color:var(--muted);">
+            <span>Logo</span><span>Bannière</span><span>Podcast</span><span>Vidéo</span>
+          </div>
+        </div>
+
+        <!-- Livrable -->
+        <div class="livr aos d4">
+          <div class="ll">Livrable — Google Classroom</div>
+          <div class="lt">
+            Partagez dans le flux de la classe :<br/>
+            <strong>1.</strong> L'URL de votre blog Blogger enrichi (logo + bannière + podcast)<br/>
+            <strong>2.</strong> Une capture d'écran de votre logo Canva AI<br/>
+            <strong>3.</strong> Le lien vers votre notebook NotebookLM<br/>
+            <strong>[Bonus]</strong> Le lien vers votre vidéo ou MP4 téléchargé.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+<script>
+'use strict';
+const pages=[document.getElementById('p0'),document.getElementById('p1'),document.getElementById('p2'),document.getElementById('p3')];
+const dots=document.querySelectorAll('.pdot');
+const bar=document.getElementById('pgbar');
+const progress=()=>{const h=document.documentElement.scrollHeight-window.innerHeight;bar.style.width=h>0?(window.scrollY/h*100).toFixed(1)+'%':'0%';};
+const activeDot=()=>{const mid=window.scrollY+window.innerHeight*.42;let a=0;pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)a=i;});dots.forEach((d,i)=>d.classList.toggle('on',i===a));};
+dots.forEach((d,i)=>d.addEventListener('click',()=>{pages[i]?.scrollIntoView({behavior:'smooth',block:'start'});}));
+document.addEventListener('keydown',e=>{
+  const mid=window.scrollY+window.innerHeight*.42;let cur=0;
+  pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)cur=i;});
+  if((e.key==='ArrowDown'||e.key==='ArrowRight'||e.key===' ')&&cur<pages.length-1){e.preventDefault();pages[cur+1].scrollIntoView({behavior:'smooth',block:'start'});}
+  if((e.key==='ArrowUp'||e.key==='ArrowLeft')&&cur>0){e.preventDefault();pages[cur-1].scrollIntoView({behavior:'smooth',block:'start'});}
+});
+let ty=0;
+document.addEventListener('touchstart',e=>{ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dy)>55){const mid=window.scrollY+window.innerHeight*.42;let cur=0;
+  pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)cur=i;});
+  if(dy<0&&cur<pages.length-1)pages[cur+1].scrollIntoView({behavior:'smooth',block:'start'});
+  if(dy>0&&cur>0)pages[cur-1].scrollIntoView({behavior:'smooth',block:'start'});}
+},{passive:true});
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on');});},{threshold:.1});
+document.querySelectorAll('.aos').forEach(el=>obs.observe(el));
+window.addEventListener('scroll',()=>{progress();activeDot();},{passive:true});
+progress();activeDot();
+</script>
+</body>
+</html>
