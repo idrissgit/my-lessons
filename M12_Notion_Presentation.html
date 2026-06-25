@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>M12 — Notion | Organiser sa Veille avec l'IA</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+        crossorigin="anonymous"/>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet"/>
+
+  <style>
+    :root {
+      --bd:    #0A2A6E;
+      --bm:    #1565C0;
+      --bl:    #1E88E5;
+      --bxl:   #E3F2FD;
+      --bxxl:  #F0F7FF;
+      --blt:   #BBDEFB;
+      --bg:    #F4F8FF;
+      --bg2:   #EBF3FF;
+      --wh:    #FFFFFF;
+
+      --notion:    #2F3437;   /* Notion charcoal */
+      --notion-lt: #EDECEC;
+      --ai:        #1A73E8;
+      --ai-lt:     #E8F0FE;
+      --tag1:      #0F9D58;   /* green tag */
+      --tag1-lt:   #E8F5E9;
+      --tag2:      #E65100;   /* orange tag */
+      --tag2-lt:   #FFF3E0;
+      --tag3:      #6A1B9A;   /* purple tag */
+      --tag3-lt:   #F3E5F5;
+
+      --ink:   #0D1B3E;
+      --ink2:  #37475F;
+      --muted: #7B8BB2;
+      --shad:  rgba(13,35,88,.09);
+      --fh:    'Nunito', sans-serif;
+      --fm:    'Fira Code', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--fh); font-weight: 400; background: var(--bg); color: var(--ink); overflow-x: hidden; }
+    ::selection { background: var(--bm); color: #fff; }
+
+    body { scroll-snap-type: y mandatory; }
+    .page {
+      scroll-snap-align: start;
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+      position: relative; overflow: hidden;
+      padding: 74px 0 50px;
+    }
+    .page::after {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(circle, #BBDEFB 1px, transparent 1px);
+      background-size: 26px 26px; z-index: 0; pointer-events: none; opacity: .42;
+    }
+    .page.dark::after { opacity: .06; background-image: radial-gradient(circle, rgba(255,255,255,.14) 1px, transparent 1px); }
+    .page > .container { position: relative; z-index: 1; }
+
+    .top-stripe { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--bd), var(--bl), #90CAF9); }
+    .ghost { position: absolute; right: 2%; bottom: -2%; font-family: var(--fh); font-weight: 900; font-size: clamp(80px,12vw,160px); line-height: 1; pointer-events: none; z-index: 0; letter-spacing: -.02em; }
+    .ghost.lt { color: rgba(21,101,192,.05); }
+    .ghost.dk { color: rgba(255,255,255,.04); }
+
+    #pgbar { position: fixed; top: 0; left: 0; height: 4px; background: linear-gradient(90deg, var(--bd), var(--bl), #90CAF9); transition: width .2s; z-index: 1000; }
+    #pager { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+    .pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--blt); border: none; cursor: pointer; transition: all .3s; padding: 0; }
+    .pdot.on { background: var(--bm); transform: scale(1.4); box-shadow: 0 0 0 3px rgba(21,101,192,.18); }
+    .pdot:hover:not(.on) { background: var(--bl); }
+
+    .chip { display: inline-flex; align-items: center; gap: 7px; background: var(--bxxl); border: 1.5px solid var(--blt); border-radius: 4px; padding: 5px 14px; font-family: var(--fm); font-size: 11px; color: var(--bm); letter-spacing: .1em; text-transform: uppercase; }
+    .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bl); animation: blink 2s ease infinite; }
+    .chip.wh { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.22); color: rgba(255,255,255,.9); }
+    .chip.wh .dot { background: #90CAF9; }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+    .sbar { display: flex; align-items: center; gap: 12px; background: var(--bd); color: #fff; border-radius: 8px; padding: 12px 20px; margin-bottom: 20px; }
+    .sbar .sn { font-family: var(--fm); font-size: 12px; background: rgba(255,255,255,.14); border-radius: 4px; padding: 2px 10px; color: #90CAF9; }
+    .sbar .st { font-family: var(--fh); font-size: 16px; font-weight: 800; }
+
+    /* ── PAGE 1 ── */
+    .page.p1 { background: var(--bd); }
+
+    .obj-pill { display: flex; align-items: flex-start; gap: 13px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 12px 17px; margin-bottom: 9px; }
+    .obj-pill .num { font-family: var(--fh); font-size: 20px; font-weight: 900; color: #90CAF9; opacity: .45; flex-shrink: 0; line-height: 1.1; width: 26px; }
+    .obj-pill .txt { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.78); }
+    .obj-pill .txt strong { color: #fff; font-weight: 700; }
+
+    .pkm-step { display: flex; align-items: center; gap: 0; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 10px; overflow: hidden; }
+    .ps-item { flex: 1; text-align: center; padding: 12px 6px; }
+    .ps-item .ps-ic { font-size: 22px; margin-bottom: 4px; }
+    .ps-item .ps-nm { font-family: var(--fh); font-size: 12px; font-weight: 700; color: rgba(255,255,255,.9); }
+    .ps-arr { padding: 0 4px; font-size: 16px; color: rgba(255,255,255,.2); flex-shrink: 0; }
+
+    /* ── PAGE 2 ── */
+    .page.p2 { background: var(--wh); }
+
+    .mc { background: var(--wh); border: 1.5px solid var(--blt); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px var(--shad); margin-bottom: 14px; }
+    .mc-h { display: flex; align-items: center; justify-content: space-between; padding: 11px 18px; }
+    .mc-title { font-family: var(--fh); font-size: 14px; font-weight: 800; color: #fff; }
+    .mc-time  { font-family: var(--fm); font-size: 11px; color: rgba(255,255,255,.72); background: rgba(0,0,0,.18); padding: 3px 10px; border-radius: 20px; }
+    .mc-body  { padding: 14px 18px; }
+
+    .sr { display: flex; align-items: flex-start; gap: 11px; padding: 7px 0; border-bottom: 1px solid var(--bxxl); font-size: 13.5px; color: var(--ink2); line-height: 1.55; }
+    .sr:last-child { border-bottom: none; }
+    .srn { width: 21px; height: 21px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--fh); font-size: 10px; font-weight: 800; color: #fff; margin-top: 2px; }
+    .sr strong { color: var(--ink); font-weight: 700; }
+
+    /* Notion page mock */
+    .notion-mock { background: var(--wh); border: 1.5px solid var(--blt); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px var(--shad); }
+    .notion-bar { background: var(--notion); padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
+    .notion-bar span { font-family: var(--fh); font-size: 12px; font-weight: 700; color: #fff; }
+    .notion-prop-row { display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-bottom: 1px solid var(--bxl); font-size: 12px; }
+    .notion-prop-row:last-child { border-bottom: none; }
+    .np-icon { font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
+    .np-label { font-family: var(--fm); font-size: 10.5px; color: var(--muted); width: 80px; flex-shrink: 0; }
+    .np-value { font-size: 12px; color: var(--ink); flex: 1; }
+    .tag-pill { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 10.5px; font-weight: 600; }
+    .tag-pill.g { background: var(--tag1-lt); color: var(--tag1); }
+    .tag-pill.o { background: var(--tag2-lt); color: var(--tag2); }
+    .tag-pill.p { background: var(--tag3-lt); color: var(--tag3); }
+
+    /* prompt box */
+    .pb { background: var(--bxxl); border: 1.5px solid var(--blt); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+    .pb-h { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--ai); }
+    .pb-h span { font-family: var(--fm); font-size: 11px; color: rgba(255,255,255,.85); letter-spacing: .06em; }
+    .pb-body { padding: 10px 14px; font-family: var(--fm); font-size: 11.5px; line-height: 1.8; color: var(--ink2); background: var(--wh); }
+    .pb-body em { color: var(--bm); font-style: normal; font-weight: 500; }
+
+    .ck-list { list-style: none; padding: 0; margin: 0; }
+    .ck-list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; margin-bottom: 6px; background: var(--wh); border: 1.5px solid var(--bxxl); border-radius: 8px; font-size: 13px; color: var(--ink2); box-shadow: 0 1px 4px var(--shad); }
+    .ck-list li .ck { width: 19px; height: 19px; border-radius: 4px; flex-shrink: 0; border: 1.5px solid var(--blt); background: var(--bxxl); margin-top: 1px; }
+    .ck-list li strong { color: var(--ink); font-weight: 700; }
+
+    .livr { background: var(--bd); border-radius: 10px; padding: 16px 20px; }
+    .livr .ll { font-family: var(--fm); font-size: 10px; color: #90CAF9; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 6px; }
+    .livr .lt { font-size: 13.5px; color: rgba(255,255,255,.82); line-height: 1.8; }
+    .livr .lt strong { color: #fff; }
+
+    .qbox { border-left: 3px solid var(--bl); padding: 12px 18px; background: var(--bxxl); border-radius: 0 8px 8px 0; font-size: 13.5px; line-height: 1.75; color: var(--ink2); }
+    .qbox strong { color: var(--bd); font-weight: 700; }
+
+    /* AOS */
+    .aos { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s ease; }
+    .aos.on { opacity: 1; transform: none; }
+    .d1{transition-delay:.07s} .d2{transition-delay:.14s} .d3{transition-delay:.21s}
+    .d4{transition-delay:.28s} .d5{transition-delay:.35s}
+
+    @media(max-width:768px){ #pager{display:none;} .page{min-height:auto;padding:56px 0 36px;} body{scroll-snap-type:none;} }
+  </style>
+</head>
+<body>
+
+<div id="pgbar" style="width:0%"></div>
+<nav id="pager">
+  <button class="pdot on"  data-i="0" title="Titre & Objectifs"></button>
+  <button class="pdot"     data-i="1" title="Atelier Notion + IA"></button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — TITRE & OBJECTIFS
+══════════════════════════════════════════ -->
+<div class="page p1 dark" id="p0">
+  <div class="top-stripe"></div>
+  <div class="ghost dk">NOTION</div>
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- LEFT -->
+      <div class="col-lg-6">
+        <div class="chip wh mb-4 aos"><span class="dot"></span>Module M12 &nbsp;·&nbsp; Plateforme Notion</div>
+        <h1 class="aos d1" style="font-family:var(--fh);font-weight:900;font-size:clamp(32px,5vw,62px);line-height:1.06;color:#fff;">
+          Organiser sa<br>
+          <span style="color:#64B5F6;">Veille</span> avec<br>
+          Notion + IA
+        </h1>
+        <p class="aos d2" style="font-size:1.05rem;font-weight:400;line-height:1.85;color:rgba(255,255,255,.72);max-width:460px;margin-top:12px;">
+          Mettre en place un <strong style="color:#fff;">système personnel d'organisation</strong>
+          des informations collectées, enrichi par
+          <strong style="color:#64B5F6;">l'intelligence artificielle</strong>.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-4 aos d3">
+          <span class="chip wh" style="text-transform:none;"><i class="bi bi-grid-3x3-gap-fill"></i> notion.so</span>
+          <span class="chip wh" style="text-transform:none;"><i class="bi bi-robot"></i> Notion AI / Claude</span>
+          <span class="chip wh" style="text-transform:none;"><i class="bi bi-clock"></i> 2 heures</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: objectives + PKM cycle -->
+      <div class="col-lg-6 aos d2">
+        <span style="font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.13em;text-transform:uppercase;display:block;margin-bottom:10px;">Objectifs de la séance</span>
+
+        <div class="obj-pill">
+          <div class="num">01</div>
+          <div class="txt">Configurer une <strong>base de données Notion</strong> dédiée à votre veille IA personnelle.</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">02</div>
+          <div class="txt">Structurer chaque entrée avec des <strong>propriétés utiles</strong> : tags, source, date, résumé.</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">03</div>
+          <div class="txt">Utiliser <strong>Notion AI</strong> ou Claude pour résumer et tagger automatiquement vos articles.</div>
+        </div>
+        <div class="obj-pill">
+          <div class="num">04</div>
+          <div class="txt">Importer et organiser <strong>3 articles</strong> découverts dans les séances précédentes.</div>
+        </div>
+
+        <!-- PKM cycle -->
+        <div class="pkm-step mt-4">
+          <div class="ps-item"><div class="ps-ic">📥</div><div class="ps-nm">Capturer</div></div>
+          <div class="ps-arr"><i class="bi bi-arrow-right"></i></div>
+          <div class="ps-item"><div class="ps-ic">🗂️</div><div class="ps-nm">Organiser</div></div>
+          <div class="ps-arr"><i class="bi bi-arrow-right"></i></div>
+          <div class="ps-item"><div class="ps-ic">🔁</div><div class="ps-nm">Réviser</div></div>
+          <div class="ps-arr"><i class="bi bi-arrow-right"></i></div>
+          <div class="ps-item"><div class="ps-ic">🤝</div><div class="ps-nm">Partager</div></div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 mt-4" style="opacity:.33;">
+          <div style="height:2px;width:28px;background:#90CAF9;border-radius:2px;"></div>
+          <span style="font-family:var(--fm);font-size:11px;color:#90CAF9;letter-spacing:.1em;">01 / 02 — ↓ ou Espace</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — ATELIER NOTION + IA (Missions)
+══════════════════════════════════════════ -->
+<div class="page p2" id="p1">
+  <div class="ghost lt">PKM</div>
+  <div class="container">
+
+    <div class="sbar aos">
+      <span class="sn">02</span>
+      <span class="st">Atelier — Configurer Notion et organiser avec l'IA</span>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: missions -->
+      <div class="col-lg-7">
+
+        <div class="mc aos d1">
+          <div class="mc-h" style="background:var(--notion);">
+            <span class="mc-title"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Mission 1 — Créer votre base Notion</span>
+            <span class="mc-time">15 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr"><span class="srn" style="background:var(--notion);">1</span><span>Créer un compte sur <strong>notion.so</strong> avec votre Gmail (gratuit)</span></div>
+            <div class="sr"><span class="srn" style="background:var(--notion);">2</span><span>Nouvelle page → <strong>Tableau (Database)</strong> → nommer <em style="color:var(--bm);">"Ma Veille IA M12"</em></span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--notion);">3</span><span>Ajouter les colonnes : <strong>Titre, Source, Date, Tags, Résumé, Pertinence</strong></span></div>
+          </div>
+        </div>
+
+        <!-- Notion mock -->
+        <div class="notion-mock mb-3 aos d2">
+          <div class="notion-bar"><i class="bi bi-grid-3x3-gap-fill" style="font-size:13px;color:#fff;"></i><span>Ma Veille IA M12 — Fiche d'article</span></div>
+          <div class="notion-prop-row"><span class="np-icon">📄</span><span class="np-label">Titre</span><span class="np-value">Comment les LLMs transforment la recherche</span></div>
+          <div class="notion-prop-row"><span class="np-icon">🔗</span><span class="np-label">Source</span><span class="np-value">Hugging Face Blog</span></div>
+          <div class="notion-prop-row"><span class="np-icon">📅</span><span class="np-label">Date</span><span class="np-value">18 juin 2026</span></div>
+          <div class="notion-prop-row"><span class="np-icon">🏷️</span><span class="np-label">Tags</span><span class="np-value"><span class="tag-pill g">NLP</span> <span class="tag-pill o">Modèles</span> <span class="tag-pill p">Recherche</span></span></div>
+          <div class="notion-prop-row"><span class="np-icon">⭐</span><span class="np-label">Pertinence</span><span class="np-value">★★★★☆</span></div>
+        </div>
+
+        <div class="mc aos d3">
+          <div class="mc-h" style="background:var(--ai);">
+            <span class="mc-title"><i class="bi bi-robot me-2"></i>Mission 2 — Importer 3 articles avec l'aide de l'IA</span>
+            <span class="mc-time">25 min</span>
+          </div>
+          <div class="mc-body">
+            <div class="sr"><span class="srn" style="background:var(--ai);">1</span><span>Reprendre <strong>3 articles</strong> trouvés lors des séances précédentes (Feedly, LinkedIn, X)</span></div>
+            <div class="sr"><span class="srn" style="background:var(--ai);">2</span><span>Pour chacun : créer une <strong>nouvelle ligne</strong> dans votre base Notion</span></div>
+            <div class="sr"><span class="srn" style="background:var(--ai);">3</span><span>Coller le texte dans <strong>Claude ou Notion AI</strong> avec le prompt ci-dessous</span></div>
+            <div class="sr" style="border:none;"><span class="srn" style="background:var(--ai);">4</span><span>Copier le résumé généré dans la colonne <strong>Résumé</strong> + ajouter les Tags suggérés</span></div>
+          </div>
+        </div>
+
+        <div class="pb aos d4">
+          <div class="pb-h"><i class="bi bi-magic" style="font-size:13px;color:#fff;"></i><span>Prompt — Résumer et tagger un article</span></div>
+          <div class="pb-body">"Résume cet article en <em>3 phrases maximum</em>, puis propose <em>3 tags pertinents</em> (1 mot chacun) pour le classer dans ma base de veille IA :<br/>[coller le texte de l'article]"</div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: checklist + livrable -->
+      <div class="col-lg-5">
+
+        <span style="font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:8px;" class="aos d2">Checklist de validation</span>
+        <ul class="ck-list mb-4 aos d2">
+          <li><span class="ck"></span><span><strong>Compte Notion</strong> créé et base de données configurée</span></li>
+          <li><span class="ck"></span><span><strong>6 propriétés</strong> ajoutées : Titre, Source, Date, Tags, Résumé, Pertinence</span></li>
+          <li><span class="ck"></span><span><strong>3 articles</strong> importés avec fiche complète</span></li>
+          <li><span class="ck"></span><span>Résumés générés avec <strong>aide IA</strong> (Claude / Notion AI)</span></li>
+          <li><span class="ck"></span><span><strong>Tags cohérents</strong> appliqués à chaque article</span></li>
+          <li><span class="ck"></span><span>Lien de partage Notion <strong>copié</strong> pour Google Classroom</span></li>
+        </ul>
+
+        <div class="qbox mb-3 aos d3">
+          <strong>Alternative :</strong> Si vous préférez, <strong>Obsidian</strong> ou <strong>Evernote</strong>
+          fonctionnent aussi. Le principe reste le même : capturer → structurer → enrichir avec l'IA.
+        </div>
+
+        <div class="livr aos d4">
+          <div class="ll">Livrable — Google Classroom</div>
+          <div class="lt">
+            Partagez le <strong>lien de partage public</strong> de votre page Notion
+            (bouton "Partager" → "Partager sur le web") avec vos <strong>3 articles</strong>
+            organisés et résumés.<br/><br/>
+            <strong>Bonus :</strong> Ajoutez 1 phrase expliquant pourquoi cette organisation
+            vous convient personnellement.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+<script>
+'use strict';
+const pages=[document.getElementById('p0'),document.getElementById('p1')];
+const dots=document.querySelectorAll('.pdot');
+const bar=document.getElementById('pgbar');
+const progress=()=>{const h=document.documentElement.scrollHeight-window.innerHeight;bar.style.width=h>0?(window.scrollY/h*100).toFixed(1)+'%':'0%';};
+const activeDot=()=>{const mid=window.scrollY+window.innerHeight*.42;let a=0;pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)a=i;});dots.forEach((d,i)=>d.classList.toggle('on',i===a));};
+dots.forEach((d,i)=>d.addEventListener('click',()=>{pages[i]?.scrollIntoView({behavior:'smooth',block:'start'});}));
+document.addEventListener('keydown',e=>{
+  const mid=window.scrollY+window.innerHeight*.42;let cur=0;
+  pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)cur=i;});
+  if((e.key==='ArrowDown'||e.key==='ArrowRight'||e.key===' ')&&cur<pages.length-1){e.preventDefault();pages[cur+1].scrollIntoView({behavior:'smooth',block:'start'});}
+  if((e.key==='ArrowUp'||e.key==='ArrowLeft')&&cur>0){e.preventDefault();pages[cur-1].scrollIntoView({behavior:'smooth',block:'start'});}
+});
+let ty=0;
+document.addEventListener('touchstart',e=>{ty=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dy)>55){const mid=window.scrollY+window.innerHeight*.42;let cur=0;
+  pages.forEach((p,i)=>{if(p&&p.getBoundingClientRect().top+window.scrollY<=mid)cur=i;});
+  if(dy<0&&cur<pages.length-1)pages[cur+1].scrollIntoView({behavior:'smooth',block:'start'});
+  if(dy>0&&cur>0)pages[cur-1].scrollIntoView({behavior:'smooth',block:'start'});}
+},{passive:true});
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on');});},{threshold:.1});
+document.querySelectorAll('.aos').forEach(el=>obs.observe(el));
+window.addEventListener('scroll',()=>{progress();activeDot();},{passive:true});
+progress();activeDot();
+</script>
+</body>
+</html>
